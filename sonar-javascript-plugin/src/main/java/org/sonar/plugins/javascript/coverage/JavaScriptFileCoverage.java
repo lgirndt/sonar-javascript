@@ -22,9 +22,13 @@ package org.sonar.plugins.javascript.coverage;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 public final class JavaScriptFileCoverage {
 
   private Map<Integer, Integer> lineCoverageData = new HashMap<Integer, Integer>();
+  private Multimap<Integer, Integer> branchCoverageData = ArrayListMultimap.create();
   private String filePath;
 
   public Map<Integer, Integer> getLineCoverageData() {
@@ -48,6 +52,10 @@ public final class JavaScriptFileCoverage {
     return lineCoverageData.size();
   }
 
+  public int getBranchesToCover() {
+      return branchCoverageData.values().size();
+  }
+
   // Covered Executable Line Count
   public int getCoveredLines() {
     int lines = 0;
@@ -59,12 +67,35 @@ public final class JavaScriptFileCoverage {
     return lines;
   }
 
+    public int getCoveredBranches() {
+        int branches = 0;
+        for (Map.Entry<Integer, Integer> entry : branchCoverageData.entries()) {
+            if (entry.getValue() > 0) {
+                branches++;
+            }
+        }
+        return branches;
+    }
+
   public void addLine(int lineNumber, int executionCount) {
     lineCoverageData.put(lineNumber, executionCount);
   }
 
+    public void addBranch(int lineNumber, int executionCount) {
+        branchCoverageData.put(lineNumber, executionCount);
+    }
+
+    public Multimap<Integer, Integer> getBranchCoverageData() {
+        return branchCoverageData;
+    }
+
   public int getUncoveredLines() {
     return getLinesToCover() - getCoveredLines();
   }
+
+    public int getUncoveredBranches() {
+        return getBranchesToCover() - getCoveredBranches();
+    }
+
 
 }

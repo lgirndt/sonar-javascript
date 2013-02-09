@@ -19,6 +19,10 @@
  */
 package org.sonar.plugins.javascript.jstestdriver;
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.sonar.api.batch.Sensor;
@@ -33,9 +37,7 @@ import org.sonar.plugins.javascript.core.JavaScript;
 import org.sonar.plugins.javascript.coverage.JavaScriptFileCoverage;
 import org.sonar.plugins.javascript.coverage.LCOVParser;
 
-import java.io.File;
-import java.util.List;
-import java.util.Map;
+import com.google.common.collect.Multimap;
 
 public class JsTestDriverCoverageSensor implements Sensor {
 
@@ -69,6 +71,7 @@ public class JsTestDriverCoverageSensor implements Sensor {
         JavaScriptFileCoverage fileCoverage = getFileCoverage(inputFile, coveredFiles);
         org.sonar.api.resources.File resource = org.sonar.api.resources.File.fromIOFile(inputFile.getFile(), project);
         PropertiesBuilder<Integer, Integer> lineHitsData = new PropertiesBuilder<Integer, Integer>(CoreMetrics.COVERAGE_LINE_HITS_DATA);
+        PropertiesBuilder<Integer, Integer> branchHitsData = new PropertiesBuilder<Integer, Integer>(CoreMetrics.COVERED_CONDITIONS_BY_LINE);
 
         if (fileCoverage != null) {
           Map<Integer, Integer> hits = fileCoverage.getLineCoverageData();
@@ -76,9 +79,18 @@ public class JsTestDriverCoverageSensor implements Sensor {
             lineHitsData.add(entry.getKey(), entry.getValue());
           }
 
+          Multimap<Integer, Integer> branchHits = fileCoverage.getBranchCoverageData();
+          for (Map.Entry<Integer, Integer> entry : branchHits.entries()) {
+              branchHitsData.add(entry.getKey(), entry.getValue());
+          }
+
           sensorContext.saveMeasure(resource, lineHitsData.build());
           sensorContext.saveMeasure(resource, CoreMetrics.LINES_TO_COVER, (double) fileCoverage.getLinesToCover());
           sensorContext.saveMeasure(resource, CoreMetrics.UNCOVERED_LINES, (double) fileCoverage.getUncoveredLines());
+
+          sensorContext.saveMeasure(resource, branchHitsData.build());
+          sensorContext.saveMeasure(resource, CoreMetrics.CONDITIONS_TO_COVER, (double) fileCoverage.getBranchesToCover());
+          sensorContext.saveMeasure(resource, CoreMetrics.UNCOVERED_CONDITIONS, (double) fileCoverage.getUncoveredBranches());
         } else {
 
           // colour all lines as not executed
@@ -91,6 +103,7 @@ public class JsTestDriverCoverageSensor implements Sensor {
           sensorContext.saveMeasure(resource, lineHitsData.build());
           sensorContext.saveMeasure(resource, CoreMetrics.LINES_TO_COVER, ncloc.getValue());
           sensorContext.saveMeasure(resource, CoreMetrics.UNCOVERED_LINES, ncloc.getValue());
+//          sensorContext.saveMeasure(resource, CoreMetrics.BRANCH_COVERAGE, 50.0);
         }
 
       } catch (Exception e) {
