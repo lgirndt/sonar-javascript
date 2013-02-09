@@ -20,102 +20,25 @@
 
 package org.sonar.plugins.javascript.testacular;
 
-import java.io.File;
 import java.util.List;
-import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.sonar.api.batch.Sensor;
-import org.sonar.api.batch.SensorContext;
-import org.sonar.api.measures.CoreMetrics;
-import org.sonar.api.measures.Measure;
-import org.sonar.api.measures.PropertiesBuilder;
 import org.sonar.api.resources.InputFile;
 import org.sonar.api.resources.Project;
 import org.sonar.plugins.javascript.JavaScriptPlugin;
 import org.sonar.plugins.javascript.core.JavaScript;
 import org.sonar.plugins.javascript.coverage.JavaScriptFileCoverage;
-import org.sonar.plugins.javascript.coverage.LCOVParser;
 import org.sonar.plugins.javascript.jstestdriver.JsTestDriverCoverageSensor;
 
-import com.google.common.collect.Multimap;
+public class TestacularCoverageSensor extends JsTestDriverCoverageSensor {
 
-public class TestacularCoverageSensor implements Sensor {
 
-    protected JavaScript javascript;
+  public TestacularCoverageSensor(JavaScript javascript) {
+    super(javascript);
+  }
 
-    public TestacularCoverageSensor(JavaScript javascript) {
-        this.javascript = javascript;
-    }
-
-    private static final Logger LOG = LoggerFactory.getLogger(JsTestDriverCoverageSensor.class);
-
-    public boolean shouldExecuteOnProject(Project project) {
+  public boolean shouldExecuteOnProject(Project project) {
         return javascript.equals(project.getLanguage())
                 && "testacular".equals(javascript.getSettings().getString(JavaScriptPlugin.TEST_FRAMEWORK_KEY));
-    }
-
-    public void analyse(Project project, SensorContext sensorContext) {
-        File jsTestDriverCoverageReportFile = new File(project.getFileSystem().getBasedir(), getTestReportsFolder()
-                + "/" + getTestCoverageFileName());
-
-        LCOVParser parser = new LCOVParser();
-        List<JavaScriptFileCoverage> coveredFiles = parser.parseFile(jsTestDriverCoverageReportFile);
-
-        analyseCoveredFiles(project, sensorContext, coveredFiles);
-    }
-
-    protected void analyseCoveredFiles(Project project, SensorContext sensorContext, List<JavaScriptFileCoverage> coveredFiles) {
-
-        for (InputFile inputFile : project.getFileSystem().mainFiles(JavaScript.KEY)) {
-            try {
-                JavaScriptFileCoverage fileCoverage = getFileCoverage(inputFile, coveredFiles);
-                org.sonar.api.resources.File resource = org.sonar.api.resources.File.fromIOFile(inputFile.getFile(), project);
-                PropertiesBuilder<Integer, Integer> lineHitsData = new PropertiesBuilder<Integer, Integer>(CoreMetrics.COVERAGE_LINE_HITS_DATA);
-                PropertiesBuilder<Integer, Integer> branchHitsData = new PropertiesBuilder<Integer, Integer>(CoreMetrics.COVERED_CONDITIONS_BY_LINE);
-
-                if (fileCoverage != null) {
-                    Map<Integer, Integer> hits = fileCoverage.getLineCoverageData();
-                    for (Map.Entry<Integer, Integer> entry : hits.entrySet()) {
-                        lineHitsData.add(entry.getKey(), entry.getValue());
-                    }
-
-                    Multimap<Integer, Integer> branchHits = fileCoverage.getBranchCoverageData();
-                    for (Map.Entry<Integer, Integer> entry : branchHits.entries()) {
-                        branchHitsData.add(entry.getKey(), entry.getValue());
-                    }
-
-                    sensorContext.saveMeasure(resource, lineHitsData.build());
-                    sensorContext.saveMeasure(resource, CoreMetrics.LINES_TO_COVER, (double) fileCoverage.getLinesToCover());
-                    sensorContext.saveMeasure(resource, CoreMetrics.UNCOVERED_LINES, (double) fileCoverage.getUncoveredLines());
-
-                    sensorContext.saveMeasure(resource, branchHitsData.build());
-                    sensorContext.saveMeasure(resource, CoreMetrics.CONDITIONS_TO_COVER, (double) fileCoverage.getBranchesToCover());
-                    sensorContext.saveMeasure(resource, CoreMetrics.UNCOVERED_CONDITIONS, (double) fileCoverage.getUncoveredBranches());
-                } else {
-
-                    // colour all lines as not executed
-                    for (int x = 1; x < sensorContext.getMeasure(resource, CoreMetrics.LINES).getIntValue(); x++) {
-                        lineHitsData.add(x, 0);
-                    }
-
-                    // use non comment lines of code for coverage calculation
-                    Measure ncloc = sensorContext.getMeasure(resource, CoreMetrics.NCLOC);
-                    sensorContext.saveMeasure(resource, lineHitsData.build());
-                    sensorContext.saveMeasure(resource, CoreMetrics.LINES_TO_COVER, ncloc.getValue());
-                    sensorContext.saveMeasure(resource, CoreMetrics.UNCOVERED_LINES, ncloc.getValue());
-
-                    // we don't have branch coverage info on these files. in worst case each line is a branch
-                    sensorContext.saveMeasure(resource, CoreMetrics.CONDITIONS_TO_COVER, ncloc.getValue());
-                    sensorContext.saveMeasure(resource, CoreMetrics.UNCOVERED_CONDITIONS, ncloc.getValue());
-
-                }
-
-            } catch (Exception e) {
-                LOG.error("Problem while calculating coverage for " + inputFile.getFileBaseDir() + inputFile.getRelativePath(), e);
-            }
-        }
     }
 
     protected JavaScriptFileCoverage getFileCoverage(InputFile input, List<JavaScriptFileCoverage> coverages) {
@@ -136,10 +59,4 @@ public class TestacularCoverageSensor implements Sensor {
     protected String getTestCoverageFileName() {
         return javascript.getSettings().getString(JavaScriptPlugin.TESTACULAR_COVERAGE_FILE_KEY);
     }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName();
-    }
-
 }
