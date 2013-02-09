@@ -74,6 +74,14 @@
       <artifactId>fest-assert</artifactId>
       <scope>test</scope>
     </dependency>
+      <dependency>
+          <groupId>org.codehaus.sonar.plugins</groupId>
+          <artifactId>sonar-surefire-plugin</artifactId>
+          <version>3.0</version>
+      </dependency>
+
+      <!-- todo von lars -->
+
   </dependencies>
 
   <build>
