@@ -37,26 +37,26 @@ public class TestacularCoverageSensor extends JsTestDriverCoverageSensor {
   }
 
   public boolean shouldExecuteOnProject(Project project) {
-        return javascript.equals(project.getLanguage())
-                && "testacular".equals(javascript.getSettings().getString(JavaScriptPlugin.TEST_FRAMEWORK_KEY));
-    }
+    return javascript.equals(project.getLanguage())
+        && "testacular".equals(javascript.getSettings().getString(JavaScriptPlugin.TEST_FRAMEWORK_KEY));
+  }
 
-    protected JavaScriptFileCoverage getFileCoverage(InputFile input, List<JavaScriptFileCoverage> coverages) {
-        for (JavaScriptFileCoverage file : coverages) {
-          String baseDir = javascript.getSettings().getString(JavaScriptPlugin.TESTACULAR_SRC_FOLDER_KEY);
-          String inputFile = baseDir + "/" + input.getRelativePath();
-          if (file.getFilePath().equals(inputFile)) {
-              return file;
-          }
-        }
-        return null;
+  protected JavaScriptFileCoverage getFileCoverage(InputFile input, List<JavaScriptFileCoverage> coverages) {
+    for (JavaScriptFileCoverage file : coverages) {
+      String baseDir = javascript.getSettings().getString(JavaScriptPlugin.TESTACULAR_SRC_FOLDER_KEY);
+      String inputFile = baseDir + "/" + input.getRelativePath();
+      if (file.getFilePath().equals(inputFile)) {
+        return file;
+      }
     }
+    return null;
+  }
 
-    protected String getTestReportsFolder() {
-        return javascript.getSettings().getString(JavaScriptPlugin.TESTACULAR_FOLDER_KEY);
-    }
+  protected String getTestReportsFolder() {
+    return javascript.getSettings().getString(JavaScriptPlugin.TESTACULAR_FOLDER_KEY);
+  }
 
-    protected String getTestCoverageFileName() {
-        return javascript.getSettings().getString(JavaScriptPlugin.TESTACULAR_COVERAGE_FILE_KEY);
-    }
+  protected String getTestCoverageFileName() {
+    return javascript.getSettings().getString(JavaScriptPlugin.TESTACULAR_COVERAGE_FILE_KEY);
+  }
 }
