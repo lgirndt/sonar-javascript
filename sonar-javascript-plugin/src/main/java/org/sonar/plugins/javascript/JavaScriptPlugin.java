@@ -19,7 +19,8 @@
  */
 package org.sonar.plugins.javascript;
 
-import com.google.common.collect.ImmutableList;
+import java.util.List;
+
 import org.sonar.api.Extension;
 import org.sonar.api.Properties;
 import org.sonar.api.Property;
@@ -34,8 +35,10 @@ import org.sonar.plugins.javascript.jstest.JsTestMavenPluginHandler;
 import org.sonar.plugins.javascript.jstest.JsTestSurefireSensor;
 import org.sonar.plugins.javascript.jstestdriver.JsTestDriverCoverageSensor;
 import org.sonar.plugins.javascript.jstestdriver.JsTestDriverSurefireSensor;
+import org.sonar.plugins.javascript.testacular.TestacularCoverageSensor;
+import org.sonar.plugins.javascript.testacular.TestacularUnitTestSensor;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 
 @Properties({
   // Global JavaScript settings
@@ -88,7 +91,37 @@ import java.util.List;
     description = "Filename where JsTest generates coverage data.",
     global = true,
     project = true,
-    category = "JSTest")
+    category = "JSTest"),
+
+  @Property(
+    key = JavaScriptPlugin.TESTACULAR_FOLDER_KEY,
+    defaultValue = JavaScriptPlugin.TESTACULAR_FOLDER,
+    name = "Testacular Report Base Folder",
+    description = "Base Folder where Testacular will output the coverage and test files",
+    global = true,
+    project = true,
+    category = "Testacular"
+  ),
+
+  @Property(
+    key = JavaScriptPlugin.TESTACULAR_COVERAGE_FILE_KEY,
+    defaultValue = JavaScriptPlugin.TESTACULAR_COVERAGE_FILE,
+    name = "Testacular coverage file",
+    description = "Path to the lcov coverage file.",
+    global =  true,
+    project = true,
+    category = "Testacular"
+  ),
+
+  @Property(
+    key = JavaScriptPlugin.TESTACULAR_SRC_FOLDER_KEY,
+      defaultValue = JavaScriptPlugin.TESTACULAR_SRC_FOLDER,
+      name = "Javascript relative source folder",
+      description = "Prefix of the file name in the lcov file",
+      global = true,
+      project = true,
+      category = "Testacular"
+  )
 })
 public class JavaScriptPlugin extends SonarPlugin {
 
@@ -111,7 +144,10 @@ public class JavaScriptPlugin extends SonarPlugin {
         JsTestMavenInitializer.class,
         JsTestMavenPluginHandler.class,
         JsTestCoverageSensor.class,
-        JsTestSurefireSensor.class);
+        JsTestSurefireSensor.class,
+
+        TestacularCoverageSensor.class,
+        TestacularUnitTestSensor.class);
   }
 
   // Global JavaScript constants
@@ -137,4 +173,11 @@ public class JavaScriptPlugin extends SonarPlugin {
   public static final String JSTEST_COVERAGE_FILE_KEY = PROPERTY_PREFIX + ".jstest.coveragefile";
   public static final String JSTEST_COVERAGE_REPORT_FILENAME = "coverage.dat";
 
+  // Testacular
+  public static final String TESTACULAR_FOLDER_KEY = PROPERTY_PREFIX + ".testacular.reportsfolder";
+  public static final String TESTACULAR_FOLDER =  "target";
+  public static final String TESTACULAR_COVERAGE_FILE_KEY = PROPERTY_PREFIX + ".testacular.coveragefile";
+  public static final String TESTACULAR_COVERAGE_FILE = "lcov.info";
+  public static final String TESTACULAR_SRC_FOLDER_KEY = PROPERTY_PREFIX + ".testacular.srcfolder";
+  public static final String TESTACULAR_SRC_FOLDER = ".";
 }

@@ -103,7 +103,11 @@ public class JsTestDriverCoverageSensor implements Sensor {
           sensorContext.saveMeasure(resource, lineHitsData.build());
           sensorContext.saveMeasure(resource, CoreMetrics.LINES_TO_COVER, ncloc.getValue());
           sensorContext.saveMeasure(resource, CoreMetrics.UNCOVERED_LINES, ncloc.getValue());
-//          sensorContext.saveMeasure(resource, CoreMetrics.BRANCH_COVERAGE, 50.0);
+
+         // we don't have branch coverage info on these files. in worst case each line is a branch
+            sensorContext.saveMeasure(resource, CoreMetrics.CONDITIONS_TO_COVER, ncloc.getValue());
+            sensorContext.saveMeasure(resource, CoreMetrics.UNCOVERED_CONDITIONS, ncloc.getValue());
+
         }
 
       } catch (Exception e) {

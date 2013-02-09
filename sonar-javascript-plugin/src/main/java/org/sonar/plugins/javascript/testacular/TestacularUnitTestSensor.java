@@ -17,34 +17,22 @@
  * License along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02
  */
-package org.sonar.plugins.javascript;
 
-import static org.fest.assertions.Assertions.assertThat;
+package org.sonar.plugins.javascript.testacular;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.sonar.api.config.PropertyDefinitions;
-import org.sonar.api.config.Settings;
+import org.sonar.api.resources.Project;
+import org.sonar.plugins.javascript.JavaScriptPlugin;
+import org.sonar.plugins.javascript.core.JavaScript;
+import org.sonar.plugins.javascript.jstestdriver.JsTestDriverSurefireSensor;
 
-public class JavaScriptPluginTest {
+public class TestacularUnitTestSensor extends JsTestDriverSurefireSensor {
 
-  private JavaScriptPlugin plugin;
+    public TestacularUnitTestSensor(JavaScript javascript) {
+        super(javascript);
+    }
 
-  @Before
-  public void setUp() throws Exception {
-    plugin = new JavaScriptPlugin();
+  public boolean shouldExecuteOnProject(Project project) {
+    return javascript.equals(project.getLanguage())
+        && "testacular".equals(javascript.getSettings().getString(JavaScriptPlugin.TEST_FRAMEWORK_KEY));
   }
-
-  @Test
-  public void testGetExtensions() throws Exception {
-    assertThat(plugin.getExtensions().size()).isEqualTo(16);
-  }
-
-  @Test
-  public void testProperties() {
-    Settings settings = new Settings(new PropertyDefinitions(plugin));
-    // SONARPLUGINS-2524
-    assertThat(settings.getString(JavaScriptPlugin.TEST_FRAMEWORK_KEY)).isNull();
-  }
-
 }
